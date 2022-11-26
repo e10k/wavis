@@ -27,7 +27,7 @@ func TestToMonoSamples(t *testing.T) {
 
 func TestScaleBetween(t *testing.T) {
 	given := utils.ScaleBetween([]int32{-4, 0, 5, 6, 9}, 0, 100)
-	expected := []int32{0, 30, 69, 76, 100}
+	expected := []int32{44, 0, 55, 66, 100}
 
 	for i, _ := range expected {
 		if expected[i] != given[i] {
