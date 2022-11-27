@@ -69,7 +69,7 @@ func getSvg(w http.ResponseWriter, r *http.Request) {
 		slice = 5
 	}
 
-	scaledSamples := utils.ScaleBetween(monoSamples, 0, int32(height)/2)
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height)/2)
 
 	svg := renderer.ToSvg(scaledSamples, width, height, slice)
 

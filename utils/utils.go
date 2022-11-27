@@ -1,6 +1,6 @@
 package utils
 
-func ScaleBetween(numbers []int32, scaledMin, scaledMax int32) []int32 {
+func ScaleBetween(numbers []int16, scaledMin, scaledMax int16) []int16 {
 	// first make all numbers positive
 	for i, v := range numbers {
 		if v < 0 {
@@ -8,22 +8,28 @@ func ScaleBetween(numbers []int32, scaledMin, scaledMax int32) []int32 {
 		}
 	}
 
-	var min, max int32
+	var inputMin, inputMax int32
+
+	var numbersI32 []int32
 
 	for _, v := range numbers {
-		if v < min {
-			min = v
+		numbersI32 = append(numbersI32, int32(v))
+	}
+
+	for _, v := range numbersI32 {
+		if v < inputMin {
+			inputMin = v
 		}
-		if v > max {
-			max = v
+		if v > inputMax {
+			inputMax = v
 		}
 	}
 
-	var scaledSamples []int32
+	var scaledSamples []int16
 
-	for _, v := range numbers {
-		scaledValue := (scaledMax-scaledMin)*(v-min)/(max-min) + scaledMin
-		scaledSamples = append(scaledSamples, scaledValue)
+	for _, v := range numbersI32 {
+		scaledValue := (int32(scaledMax)-int32(scaledMin))*(v-inputMin)/(inputMax-inputMin) + int32(scaledMin)
+		scaledSamples = append(scaledSamples, int16(scaledValue))
 	}
 
 	return scaledSamples

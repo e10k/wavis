@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func ToSvg(amplitudes []int32, outputWidthPx int, outputHeightPx int, chunksCount int) string {
+func ToSvg(amplitudes []int16, outputWidthPx int, outputHeightPx int, chunksCount int) string {
 	if chunksCount == 0 {
 		chunksCount = 1
 	}
@@ -20,8 +20,8 @@ func ToSvg(amplitudes []int32, outputWidthPx int, outputHeightPx int, chunksCoun
 
 	samplesPerChunk := amplitudesLen / chunksCount
 
-	var output []int32
-	var chunks [][]int32
+	var output []int16
+	var chunks [][]int16
 	for i := 0; i < amplitudesLen; i += samplesPerChunk {
 		end := i + samplesPerChunk
 		if end > amplitudesLen {
@@ -32,7 +32,7 @@ func ToSvg(amplitudes []int32, outputWidthPx int, outputHeightPx int, chunksCoun
 	}
 
 	for _, c := range chunks {
-		var maxInChunk int32
+		var maxInChunk int16
 		for _, s := range c {
 			if s > maxInChunk {
 				maxInChunk = s
@@ -92,7 +92,7 @@ func ToSvg(amplitudes []int32, outputWidthPx int, outputHeightPx int, chunksCoun
 
 	var pathData bytes.Buffer
 	pathData.WriteString(fmt.Sprintf("M %f %d", points[0].X, points[0].Y))
-	for i := 0; i < len(points) - 1; i++ {
+	for i := 0; i < len(points)-1; i++ {
 		xMid := (points[i].X + points[i+1].X) / 2
 		yMid := (points[i].Y + points[i+1].Y) / 2
 		cpX1 := (xMid + points[i].X) / 2
@@ -102,18 +102,17 @@ func ToSvg(amplitudes []int32, outputWidthPx int, outputHeightPx int, chunksCoun
 		pathData.WriteString(fmt.Sprintf("Q %f %d %f %d", cpX2, points[i+1].Y, points[i+1].X, points[i+1].Y))
 	}
 
-
 	type svg struct {
-		Width  int
-		Height int
-		Points []point
+		Width    int
+		Height   int
+		Points   []point
 		PathData string
 	}
 
 	svgStruct := svg{
-		Width:  outputWidthPx,
-		Height: outputHeightPx,
-		Points: points,
+		Width:    outputWidthPx,
+		Height:   outputHeightPx,
+		Points:   points,
 		PathData: pathData.String(),
 	}
 
