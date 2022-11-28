@@ -198,5 +198,5 @@ func scaleToInt16(v interface{}) int16 {
 }
 
 func scale(input int64, inputMin int64, inputMax int64, outputMin int64, outputMax int64) int64 {
-	return outputMin + ((outputMax-outputMin)/(inputMax-inputMin))*(input-inputMin)
+	return (input-inputMin)*(outputMax-outputMin)/(inputMax-inputMin) + outputMin
 }
