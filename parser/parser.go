@@ -161,42 +161,42 @@ func (w *Wav) GetMonoSamples() []int16 {
 }
 
 func scaleToInt16(v interface{}) int16 {
-	var input int64
-	var inputMin int64
-	var inputMax int64
+	var input float64
+	var inputMin float64
+	var inputMax float64
 
 	switch t := v.(type) {
 	case uint8:
-		input = int64(t)
-		inputMin = int64(0)
-		inputMax = int64(math.MaxUint8)
+		input = float64(t)
+		inputMin = float64(0)
+		inputMax = float64(math.MaxUint8)
 	case int16:
-		input = int64(t)
-		inputMin = int64(math.MinInt16)
-		inputMax = int64(math.MaxInt16)
+		input = float64(t)
+		inputMin = float64(math.MinInt16)
+		inputMax = float64(math.MaxInt16)
 	case int32:
-		input = int64(t)
-		inputMin = int64(math.MinInt32)
-		inputMax = int64(math.MaxInt32)
+		input = float64(t)
+		inputMin = float64(math.MinInt32)
+		inputMax = float64(math.MaxInt32)
 	case int64:
-		input = t
-		inputMin = int64(math.MinInt64)
-		inputMax = int64(math.MaxInt64)
+		input = float64(t)
+		inputMin = float64(math.MinInt64)
+		inputMax = float64(math.MaxInt64)
 	case float32:
-		input = int64(t)
-		inputMin = int64(-1 << 24)
-		inputMax = int64(1<<24 - 1)
+		input = float64(t)
+		inputMin = float64(0)
+		inputMax = float64(1)
 	case float64:
-		input = int64(t)
-		inputMin = int64(-1 << 53)
-		inputMax = int64(1<<53 - 1)
+		input = t
+		inputMin = float64(0)
+		inputMax = float64(1)
 	default:
 		log.Fatal("unsupported type")
 	}
 
-	return int16(scale(input, inputMin, inputMax, int64(math.MinInt16), int64(math.MaxInt16)))
+	return int16(scale(input, inputMin, inputMax, float64(math.MinInt16), float64(math.MaxInt16)))
 }
 
-func scale(input int64, inputMin int64, inputMax int64, outputMin int64, outputMax int64) int64 {
+func scale(input float64, inputMin float64, inputMax float64, outputMin float64, outputMax float64) float64 {
 	return (input-inputMin)*(outputMax-outputMin)/(inputMax-inputMin) + outputMin
 }
