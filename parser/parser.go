@@ -126,15 +126,30 @@ out:
 		for ; i < wav.NumChannels; i++ {
 			sample, err := readSample(r, int(wav.BitsPerSample), &wav.AudioFormat)
 			if err != nil {
-				if err == io.EOF {
+				if err == io.EOF || err == io.ErrUnexpectedEOF {
 					break out
 				}
 
-				log.Fatal(err)
+				//log.Printf("%#v", wav.Data)
+				//log.Fatalf("wtf %s", err)
 			}
 
 			wav.Data[i] = append(wav.Data[i], sample)
 		}
+	}
+
+	// all channels should have the same number of channels, but it's not always the case
+	// so make sure to trim the longer ones
+	minSamples := len(wav.Data[0])
+	for i := int16(0); i < wav.NumChannels; i++ {
+		l := len(wav.Data[0])
+		if l < minSamples {
+			minSamples = l
+		}
+	}
+
+	for i := int16(0); i < wav.NumChannels; i++ {
+		wav.Data[i] = wav.Data[i][:minSamples]
 	}
 
 	return &wav
