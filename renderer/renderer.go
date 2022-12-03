@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"wav/parser"
 )
 
-func ToSvg(amplitudes []int16, outputWidthPx int, outputHeightPx int, chunksCount int) string {
-	if chunksCount == 0 {
-		chunksCount = 1
+func ToSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int) string {
+	if resolution == 0 {
+		resolution = 5
 	}
 
 	amplitudesLen := len(amplitudes)
 
-	if chunksCount > amplitudesLen {
-		chunksCount = amplitudesLen
+	if resolution > amplitudesLen {
+		resolution = amplitudesLen
 	}
+
+	chunksCount := amplitudesLen / (int(wav.SampleRate / int32(resolution)))
 
 	samplesPerChunk := amplitudesLen / chunksCount
 

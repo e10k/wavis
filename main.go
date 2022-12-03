@@ -64,14 +64,16 @@ func getSvg(w http.ResponseWriter, r *http.Request) {
 	if height == 0 {
 		height = 100
 	}
-	slice, _ := strconv.Atoi(r.URL.Query().Get("slice"))
-	if slice == 0 {
-		slice = 5
+
+	// points per second
+	resolution, _ := strconv.Atoi(r.URL.Query().Get("resolution"))
+	if resolution == 0 {
+		resolution = 2
 	}
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height)/2)
 
-	svg := renderer.ToSvg(scaledSamples, width, height, slice)
+	svg := renderer.ToSvg(wav, scaledSamples, width, height, resolution)
 
 	io.WriteString(w, svg)
 }
