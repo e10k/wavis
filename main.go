@@ -16,6 +16,7 @@ type Options struct {
 	width      *int
 	height     *int
 	resolution *int
+	normalise  *bool
 }
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 	options.width = flag.Int("width", 1000, "output width")
 	options.height = flag.Int("height", 400, "output height")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
+	options.normalise = flag.Bool("normalise", false, "normalise")
 
 	flag.Parse()
 
@@ -66,7 +68,7 @@ func getSvg(wav *parser.Wav, options *Options) string {
 		resolution = 2
 	}
 
-	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height)/2)
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height))
 
 	svg := renderer.ToSvg(wav, scaledSamples, width, height, resolution)
 
