@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log"
 	"net/http"
@@ -13,12 +14,26 @@ import (
 
 var wav *parser.Wav
 
+type Options struct {
+	width      *int
+	height     *int
+	resolution *int
+}
+
 func main() {
-	if len(os.Args) < 2 {
+	var options Options
+	options.width = flag.Int("width", 500, "output width")
+	options.height = flag.Int("height", 100, "output height")
+	options.resolution = flag.Int("resolution", 5, "data points per second")
+
+	flag.Parse()
+
+	filename := flag.Arg(0)
+	if len(filename) < 1 {
 		log.Fatal("No .wav file provided.")
 	}
 
-	f, err := os.Open(os.Args[1])
+	f, err := os.Open(filename)
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
