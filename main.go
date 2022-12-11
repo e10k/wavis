@@ -2,11 +2,9 @@ package main
 
 import (
 	"flag"
-	"io"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
 	"wav/parser"
 	"wav/renderer"
 	"wav/utils"
@@ -22,9 +20,9 @@ type Options struct {
 
 func main() {
 	var options Options
-	options.width = flag.Int("width", 500, "output width")
-	options.height = flag.Int("height", 100, "output height")
-	options.resolution = flag.Int("resolution", 5, "data points per second")
+	options.width = flag.Int("width", 1000, "output width")
+	options.height = flag.Int("height", 400, "output height")
+	options.resolution = flag.Int("resolution", 10, "data points per second")
 
 	flag.Parse()
 
@@ -46,42 +44,24 @@ func main() {
 
 	wav = parser.Parse(f)
 
-	/*monoSamples := wav.GetMonoSamples()
-
-	outputWidthPx := 200
-	outputHeightPx := 100
-	outputSlicePx := 5
-
-	scaledSamples := utils.ScaleBetween(monoSamples, 0, int32(outputHeightPx)/2)
-
-	//fmt.Printf("scaledSamples: %#v", scaledSamples)
-
-	renderer.ToSvg(scaledSamples, outputWidthPx, outputHeightPx, outputSlicePx)*/
-
-	http.HandleFunc("/", getSvg)
-
-	err = http.ListenAndServe(":3333", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println(getSvg(wav, &options))
 }
 
-func getSvg(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%#v", r.URL.Query().Get("a"))
-
+func getSvg(wav *parser.Wav, options *Options) string {
 	monoSamples := wav.GetMonoSamples()
 
-	width, _ := strconv.Atoi(r.URL.Query().Get("width"))
+	width := *options.width
 	if width == 0 {
 		width = 200
 	}
-	height, _ := strconv.Atoi(r.URL.Query().Get("height"))
+
+	height := *options.height
 	if height == 0 {
 		height = 100
 	}
 
 	// points per second
-	resolution, _ := strconv.Atoi(r.URL.Query().Get("resolution"))
+	resolution := *options.resolution
 	if resolution == 0 {
 		resolution = 2
 	}
@@ -90,5 +70,5 @@ func getSvg(w http.ResponseWriter, r *http.Request) {
 
 	svg := renderer.ToSvg(wav, scaledSamples, width, height, resolution)
 
-	io.WriteString(w, svg)
+	return svg
 }
