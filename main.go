@@ -15,6 +15,7 @@ var wav *parser.Wav
 type Options struct {
 	width      *int
 	height     *int
+	padding    *int
 	resolution *int
 	normalise  *bool
 }
@@ -23,6 +24,7 @@ func main() {
 	var options Options
 	options.width = flag.Int("width", 1000, "output width")
 	options.height = flag.Int("height", 400, "output height")
+	options.padding = flag.Int("padding", 40, "output vertical padding")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
 	options.normalise = flag.Bool("normalise", false, "normalise")
 
@@ -62,13 +64,15 @@ func getSvg(wav *parser.Wav, options *Options) string {
 		height = 100
 	}
 
+	padding := *options.padding
+
 	// points per second
 	resolution := *options.resolution
 	if resolution == 0 {
 		resolution = 2
 	}
 
-	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height))
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
 
 	svg := renderer.ToSvg(wav, scaledSamples, width, height, resolution)
 
