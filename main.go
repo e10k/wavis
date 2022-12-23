@@ -17,7 +17,6 @@ type Options struct {
 	height     *int
 	padding    *int
 	resolution *int
-	normalise  *bool
 }
 
 func main() {
@@ -26,7 +25,6 @@ func main() {
 	options.height = flag.Int("height", 400, "output height")
 	options.padding = flag.Int("padding", 40, "output vertical padding")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
-	options.normalise = flag.Bool("normalise", false, "normalise")
 
 	flag.Parse()
 

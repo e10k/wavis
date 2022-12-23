@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"wav/parser"
 )
 
@@ -67,19 +68,19 @@ func ToSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeightP
 		ypoints = append(ypoints, mirrored_ypoints...)*/
 
 	type point struct {
-		X float32
-		Y int
+		X float64
+		Y float64
 	}
 
 	var points []point
-	var xstep float32
+	var xstep float64
 
-	xstep = float32(outputWidthPx) / float32(chunksCount)
+	xstep = float64(outputWidthPx) / float64(chunksCount)
 
 	for i, v := range ypoints {
 		points = append(points, point{
-			X: float32(i) * xstep,
-			Y: v,
+			X: float64(i) * xstep,
+			Y: float64(v),
 		})
 	}
 
@@ -87,22 +88,28 @@ func ToSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeightP
 	var mirroredPoints []point
 	for i := len(points) - 1; i >= 0; i-- {
 		p := points[i]
-		p.Y = outputHeightPx - points[i].Y
+		p.Y = float64(outputHeightPx) - points[i].Y
 		mirroredPoints = append(mirroredPoints, p)
 	}
 
 	points = append(points, mirroredPoints...)
 
-	var pathData bytes.Buffer
-	pathData.WriteString(fmt.Sprintf("M %f %d", points[0].X, points[0].Y))
-	for i := 0; i < len(points)-1; i++ {
-		xMid := (points[i].X + points[i+1].X) / 2
-		yMid := (points[i].Y + points[i+1].Y) / 2
-		cpX1 := (xMid + points[i].X) / 2
-		cpX2 := (xMid + points[i+1].X) / 2
+	// round the points coordinates
+	for i := 0; i < len(points); i++ {
+		points[i].X = math.Round(points[i].X)
+		points[i].Y = math.Round(points[i].Y)
+	}
 
-		pathData.WriteString(fmt.Sprintf("Q %f %d %f %d", cpX1, points[i].Y, xMid, yMid))
-		pathData.WriteString(fmt.Sprintf("Q %f %d %f %d", cpX2, points[i+1].Y, points[i+1].X, points[i+1].Y))
+	var pathData bytes.Buffer
+	pathData.WriteString(fmt.Sprintf("M %d %d", int(math.Round(points[0].X)), int(math.Round(points[0].Y))))
+	for i := 0; i < len(points)-1; i++ {
+		xMid := math.Round((points[i].X + points[i+1].X) / 2)
+		yMid := math.Round((points[i].Y + points[i+1].Y) / 2)
+		cpX1 := math.Round((xMid + points[i].X) / 2)
+		cpX2 := math.Round((xMid + points[i+1].X) / 2)
+
+		pathData.WriteString(fmt.Sprintf("Q %d %d %d %d", int(cpX1), int(points[i].Y), int(xMid), int(yMid)))
+		pathData.WriteString(fmt.Sprintf("Q %d %d %d %d", int(cpX2), int(points[i+1].Y), int(points[i+1].X), int(points[i+1].Y)))
 	}
 
 	type svg struct {
