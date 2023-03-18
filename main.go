@@ -17,6 +17,7 @@ type Options struct {
 	height     *int
 	padding    *int
 	resolution *int
+	format     *int
 }
 
 func main() {
@@ -25,6 +26,7 @@ func main() {
 	options.height = flag.Int("height", 400, "output height")
 	options.padding = flag.Int("padding", 40, "output vertical padding")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
+	options.format = flag.Int("format", 1, "output format") // 1 is symmetrical svg
 
 	flag.Parse()
 
@@ -46,7 +48,23 @@ func main() {
 
 	wav = parser.Parse(f)
 
-	fmt.Println(getSvg(wav, &options))
+	switch *options.format {
+	case 1:
+		fmt.Println(getSvg(wav, &options))
+	case 2:
+		fmt.Println("true shape (not symmetrical), not implemented")
+	case 3:
+		fmt.Println("single line svg, not implemented")
+	case 4:
+		fmt.Println("radial svg, not implemented")
+	case 5:
+		fmt.Println("city skyline, not implemented")
+	case 6:
+		fmt.Println("ascii, not implemented")
+	default:
+		fmt.Println("output waveform information, no visualisation, not implemented")
+	}
+
 }
 
 func getSvg(wav *parser.Wav, options *Options) string {
