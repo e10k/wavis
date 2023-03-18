@@ -50,11 +50,11 @@ func main() {
 
 	switch *options.format {
 	case 1:
-		fmt.Println(getSvg(wav, &options))
+		fmt.Println(getBlobSvg(wav, &options))
 	case 2:
-		fmt.Println("true shape (not symmetrical), not implemented")
+		fmt.Println("true shape (not symmetrical), not implemented; probably useless? tbd")
 	case 3:
-		fmt.Println("single line svg, not implemented")
+		fmt.Println(getSingleLineSvg(wav, &options))
 	case 4:
 		fmt.Println("radial svg, not implemented")
 	case 5:
@@ -67,7 +67,7 @@ func main() {
 
 }
 
-func getSvg(wav *parser.Wav, options *Options) string {
+func getBlobSvg(wav *parser.Wav, options *Options) string {
 	monoSamples := wav.GetMonoSamples()
 
 	width := *options.width
@@ -90,7 +90,35 @@ func getSvg(wav *parser.Wav, options *Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
 
-	svg := renderer.ToSvg(wav, scaledSamples, width, height, resolution)
+	svg := renderer.ToBlobSvg(wav, scaledSamples, width, height, resolution)
+
+	return svg
+}
+
+func getSingleLineSvg(wav *parser.Wav, options *Options) string {
+	monoSamples := wav.GetMonoSamples()
+
+	width := *options.width
+	if width == 0 {
+		width = 200
+	}
+
+	height := *options.height
+	if height == 0 {
+		height = 100
+	}
+
+	padding := *options.padding
+
+	// points per second
+	resolution := *options.resolution
+	if resolution == 0 {
+		resolution = 2
+	}
+
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
+
+	svg := renderer.ToSingleLineSvg(wav, scaledSamples, width, height, resolution)
 
 	return svg
 }
