@@ -56,7 +56,7 @@ func main() {
 	case 3:
 		fmt.Println(getSingleLineSvg(wav, &options))
 	case 4:
-		fmt.Println("radial svg, not implemented")
+		fmt.Println(getRadialSvg(wav, &options))
 	case 5:
 		fmt.Println("city skyline, not implemented")
 	case 6:
@@ -119,6 +119,38 @@ func getSingleLineSvg(wav *parser.Wav, options *Options) string {
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
 
 	svg := renderer.ToSingleLineSvg(wav, scaledSamples, width, height, resolution)
+
+	return svg
+}
+
+func getRadialSvg(wav *parser.Wav, options *Options) string {
+	monoSamples := wav.GetMonoSamples()
+
+	//width := *options.width
+	//if width == 0 {
+	//	width = 200
+	//}
+	width := 500
+
+	//height := *options.height
+	//if height == 0 {
+	//	height = 100
+	//}
+	height := width
+
+	padding := *options.padding
+
+	// points per second
+	resolution := *options.resolution
+	if resolution == 0 {
+		resolution = 2
+	}
+
+	radius := width / 2
+
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(radius-padding))
+
+	svg := renderer.ToRadialSvg(wav, scaledSamples, width, height, radius, resolution)
 
 	return svg
 }
