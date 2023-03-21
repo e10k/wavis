@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"wav/parser"
 	"wav/renderer"
@@ -13,11 +14,12 @@ import (
 var wav *parser.Wav
 
 type Options struct {
-	width      *int
-	height     *int
-	padding    *int
-	resolution *int
-	format     *int
+	width       *int
+	height      *int
+	padding     *int
+	innerRadius *int
+	resolution  *int
+	format      *int
 }
 
 func main() {
@@ -25,6 +27,7 @@ func main() {
 	options.width = flag.Int("width", 1000, "output width")
 	options.height = flag.Int("height", 400, "output height")
 	options.padding = flag.Int("padding", 40, "output vertical padding")
+	options.innerRadius = flag.Int("inner-radius", 40, "inner radius for radial svg")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
 	options.format = flag.Int("format", 1, "output format") // 1 is symmetrical svg
 
@@ -126,17 +129,15 @@ func getSingleLineSvg(wav *parser.Wav, options *Options) string {
 func getRadialSvg(wav *parser.Wav, options *Options) string {
 	monoSamples := wav.GetMonoSamples()
 
-	//width := *options.width
-	//if width == 0 {
-	//	width = 200
-	//}
-	width := 500
+	width := *options.width
+	if width == 0 {
+		width = 200
+	}
 
-	//height := *options.height
-	//if height == 0 {
-	//	height = 100
-	//}
-	height := width
+	height := *options.height
+	if height == 0 {
+		height = 100
+	}
 
 	padding := *options.padding
 
@@ -146,11 +147,14 @@ func getRadialSvg(wav *parser.Wav, options *Options) string {
 		resolution = 2
 	}
 
-	radius := width / 2
+	innerRadius := *options.innerRadius
+	if innerRadius == 0 {
+		innerRadius = 29
+	}
 
-	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(radius-padding))
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(math.Min(float64(width), float64(height))/2-float64(padding)-float64(innerRadius)))
 
-	svg := renderer.ToRadialSvg(wav, scaledSamples, width, height, radius, resolution)
+	svg := renderer.ToRadialSvg(wav, scaledSamples, width, height, innerRadius, resolution)
 
 	return svg
 }
