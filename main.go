@@ -63,7 +63,7 @@ func main() {
 	case 5:
 		fmt.Println("city skyline, not implemented")
 	case 6:
-		fmt.Println("ascii, not implemented")
+		fmt.Println(getAscii(wav, &options))
 	default:
 		fmt.Println("output waveform information, no visualisation, not implemented")
 	}
@@ -155,6 +155,37 @@ func getRadialSvg(wav *parser.Wav, options *Options) string {
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(math.Min(float64(width), float64(height))/2-float64(padding)-float64(innerRadius)))
 
 	svg := renderer.ToRadialSvg(wav, scaledSamples, width, height, innerRadius, resolution)
+
+	return svg
+}
+
+func getAscii(wav *parser.Wav, options *Options) string {
+	monoSamples := wav.GetMonoSamples()
+
+	width := *options.width
+	if width == 0 {
+		width = 80
+	}
+
+	height := *options.height
+	if height == 0 {
+		height = 15
+	}
+	if height%2 != 0 {
+		height++ // make it odd so that we can have a middle line
+	}
+
+	padding := *options.padding
+
+	// points per second
+	resolution := *options.resolution
+	if resolution == 0 {
+		resolution = 2
+	}
+
+	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
+
+	svg := renderer.ToAscii(wav, scaledSamples, width, height, resolution)
 
 	return svg
 }

@@ -385,3 +385,66 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputH
 
 	return tpl.String()
 }
+
+func ToAscii(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int) string {
+	if resolution == 0 {
+		resolution = 5
+	}
+
+	amplitudesLen := len(amplitudes)
+
+	if resolution > amplitudesLen {
+		resolution = amplitudesLen
+	}
+
+	//chunksCount := amplitudesLen / (int(wav.SampleRate / int32(resolution)))
+
+	samplesPerChunk := amplitudesLen / outputWidthPx
+
+	var output []int16
+	var chunks [][]int16
+	for i := 0; i < amplitudesLen; i += samplesPerChunk {
+		end := i + samplesPerChunk
+		if end > amplitudesLen {
+			end = amplitudesLen
+		}
+
+		chunks = append(chunks, amplitudes[i:end])
+	}
+
+	for _, c := range chunks {
+		var maxInChunk int16
+		for _, s := range c {
+			if s > maxInChunk {
+				maxInChunk = s
+			}
+		}
+
+		output = append(output, maxInChunk)
+	}
+
+	var lengths []int
+
+	for _, v := range output {
+		lengths = append(lengths, int(v))
+	}
+
+	//log.Printf("%#v, %v, %v", lengths, lengths, len(lengths))
+
+	m := outputHeightPx / 2
+	var b bytes.Buffer
+	//log.Printf("m: %v, outputWidthPx: %v, outputHeightPx: %v", m, outputWidthPx, outputHeightPx)
+
+	for y := 0; y < outputHeightPx; y++ {
+		for x := 0; x < outputWidthPx; x++ {
+			if y >= m-lengths[x]-1 && y < m+lengths[x] {
+				b.WriteByte('.')
+			} else {
+				b.WriteByte(' ')
+			}
+		}
+		b.WriteByte('\n')
+	}
+
+	return b.String()
+}
