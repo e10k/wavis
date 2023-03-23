@@ -431,16 +431,16 @@ func ToAscii(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeigh
 
 	//log.Printf("%#v, %v, %v", lengths, lengths, len(lengths))
 
-	m := outputHeightPx / 2
+	m := outputHeightPx/2 + 1
 	var b bytes.Buffer
 	//log.Printf("m: %v, outputWidthPx: %v, outputHeightPx: %v", m, outputWidthPx, outputHeightPx)
 
 	for y := 0; y < outputHeightPx; y++ {
 		for x := 0; x < outputWidthPx; x++ {
 			if y >= m-lengths[x]-1 && y < m+lengths[x] {
-				b.WriteByte('.')
+				b.WriteString(".")
 			} else {
-				b.WriteByte(' ')
+				b.WriteString("~")
 			}
 		}
 		b.WriteByte('\n')

@@ -171,7 +171,7 @@ func getAscii(wav *parser.Wav, options *Options) string {
 	if height == 0 {
 		height = 15
 	}
-	if height%2 != 0 {
+	if height%2 == 0 {
 		height++ // make it odd so that we can have a middle line
 	}
 
