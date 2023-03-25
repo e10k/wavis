@@ -438,13 +438,13 @@ func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resoluti
 	for y := 0; y < outputHeightPx; y++ {
 		for x := 0; x < outputWidthPx; x++ {
 			if x == 0 && y == 0 {
-				b.WriteRune('┌')
+				b.WriteRune('╭')
 			} else if x == 0 && y == outputHeightPx-1 {
-				b.WriteRune('└')
+				b.WriteRune('╰')
 			} else if x == outputWidthPx-1 && y == 0 {
-				b.WriteRune('┐')
+				b.WriteRune('╮')
 			} else if x == outputWidthPx-1 && y == outputHeightPx-1 {
-				b.WriteRune('┘')
+				b.WriteRune('╯')
 			} else if y == 0 || y == outputHeightPx-1 {
 				b.WriteRune('─')
 			} else if x == 0 || x == outputWidthPx-1 {
