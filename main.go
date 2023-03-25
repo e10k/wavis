@@ -20,6 +20,7 @@ type Options struct {
 	padding     *int
 	innerRadius *int
 	chars       *string
+	border      *bool
 	resolution  *int
 	format      *int
 }
@@ -47,6 +48,7 @@ func main() {
 	options.padding = flag.Int("padding", 40, "output vertical padding")
 	options.innerRadius = flag.Int("inner-radius", 40, "inner radius for radial svg")
 	options.chars = flag.String("chars", "* ", "characters to use for the ascii representation")
+	options.border = flag.Bool("border", false, "whether the ascii representation should have a border")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
 	options.format = flag.Int("format", 1, "output format") // 1 is symmetrical svg
 
@@ -196,6 +198,8 @@ func getAscii(wav *parser.Wav, options *Options) string {
 
 	padding := *options.padding
 
+	border := *options.border
+
 	// points per second
 	resolution := *options.resolution
 	if resolution == 0 {
@@ -204,7 +208,7 @@ func getAscii(wav *parser.Wav, options *Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	svg := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars())
+	svg := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars(), border)
 
 	return svg
 }

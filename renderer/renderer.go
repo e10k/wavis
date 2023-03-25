@@ -386,7 +386,7 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputH
 	return tpl.String()
 }
 
-func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int, chars []string) string {
+func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int, chars []string, border bool) string {
 	if resolution == 0 {
 		resolution = 5
 	}
@@ -437,24 +437,33 @@ func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resoluti
 
 	for y := 0; y < outputHeightPx; y++ {
 		for x := 0; x < outputWidthPx; x++ {
-			if x == 0 && y == 0 {
-				b.WriteRune('╭')
-			} else if x == 0 && y == outputHeightPx-1 {
-				b.WriteRune('╰')
-			} else if x == outputWidthPx-1 && y == 0 {
-				b.WriteRune('╮')
-			} else if x == outputWidthPx-1 && y == outputHeightPx-1 {
-				b.WriteRune('╯')
-			} else if y == 0 || y == outputHeightPx-1 {
-				b.WriteRune('─')
-			} else if x == 0 || x == outputWidthPx-1 {
-				b.WriteRune('│')
-			} else if y >= m-lengths[x]-1 && y < m+lengths[x] {
+			penDown := y >= m-lengths[x]-1 && y < m+lengths[x]
+
+			if border {
+				if x == 0 && y == 0 {
+					b.WriteRune('╭')
+				} else if x == 0 && y == outputHeightPx-1 {
+					b.WriteRune('╰')
+				} else if x == outputWidthPx-1 && y == 0 {
+					b.WriteRune('╮')
+				} else if x == outputWidthPx-1 && y == outputHeightPx-1 {
+					b.WriteRune('╯')
+				} else if y == 0 || y == outputHeightPx-1 {
+					b.WriteRune('─')
+				} else if x == 0 || x == outputWidthPx-1 {
+					b.WriteRune('│')
+				} else if penDown {
+					b.WriteString(chars[0])
+				} else {
+					b.WriteString(chars[1])
+				}
+			} else if penDown {
 				b.WriteString(chars[0])
 			} else {
 				b.WriteString(chars[1])
 			}
 		}
+
 		b.WriteByte('\n')
 	}
 
