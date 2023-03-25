@@ -73,6 +73,13 @@ func main() {
 	wav = parser.Parse(f)
 
 	switch *options.format {
+	case 0:
+		*options.width = 80
+		*options.height = 18
+		*options.padding = 0
+		*options.border = true
+
+		fmt.Println(getInfo(wav, getAscii(wav, &options)))
 	case 1:
 		fmt.Println(getBlobSvg(wav, &options))
 	case 2:
@@ -208,7 +215,11 @@ func getAscii(wav *parser.Wav, options *Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	svg := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars(), border)
+	output := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars(), border)
 
-	return svg
+	return output
+}
+
+func getInfo(wav *parser.Wav, waveform string) string {
+	return renderer.ToInfo(wav, waveform)
 }

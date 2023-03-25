@@ -469,3 +469,20 @@ func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resoluti
 
 	return b.String()
 }
+
+func ToInfo(wav *parser.Wav, waveform string) string {
+	var b bytes.Buffer
+
+	b.WriteByte('\n')
+	b.WriteString(fmt.Sprintf("File: %s\n", "File Name - TODO"))
+	b.WriteString(fmt.Sprintf("Channels: %d\n", wav.NumChannels))
+	b.WriteString(fmt.Sprintf("Sample Rate: %d\n", wav.SampleRate))
+	b.WriteString(fmt.Sprintf("Bits: %d\n", wav.BitsPerSample))
+	b.WriteString(fmt.Sprintf("Byte Rate: %d\n", wav.ByteRate))
+
+	b.WriteByte('\n')
+
+	b.WriteString(waveform)
+
+	return b.String()
+}
