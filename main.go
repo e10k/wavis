@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
 	"wav/parser"
 	"wav/renderer"
 	"wav/utils"
@@ -18,8 +19,25 @@ type Options struct {
 	height      *int
 	padding     *int
 	innerRadius *int
+	chars       *string
 	resolution  *int
 	format      *int
+}
+
+func (o *Options) getChars() []string {
+	chars := strings.Split(*o.chars, "")
+
+	l := len(chars)
+
+	if l >= 2 {
+		return chars[0:2]
+	}
+
+	if l == 1 {
+		return []string{chars[0], " "}
+	}
+
+	return []string{"*", " "}
 }
 
 func main() {
@@ -28,6 +46,7 @@ func main() {
 	options.height = flag.Int("height", 400, "output height")
 	options.padding = flag.Int("padding", 40, "output vertical padding")
 	options.innerRadius = flag.Int("inner-radius", 40, "inner radius for radial svg")
+	options.chars = flag.String("chars", "* ", "characters to use for the ascii representation")
 	options.resolution = flag.Int("resolution", 10, "data points per second")
 	options.format = flag.Int("format", 1, "output format") // 1 is symmetrical svg
 
@@ -185,7 +204,7 @@ func getAscii(wav *parser.Wav, options *Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	svg := renderer.ToAscii(wav, scaledSamples, width, height, resolution)
+	svg := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars())
 
 	return svg
 }

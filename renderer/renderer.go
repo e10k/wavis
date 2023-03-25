@@ -386,7 +386,7 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputH
 	return tpl.String()
 }
 
-func ToAscii(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int) string {
+func ToAscii(amplitudes []int16, outputWidthPx int, outputHeightPx int, resolution int, chars []string) string {
 	if resolution == 0 {
 		resolution = 5
 	}
@@ -438,9 +438,9 @@ func ToAscii(wav *parser.Wav, amplitudes []int16, outputWidthPx int, outputHeigh
 	for y := 0; y < outputHeightPx; y++ {
 		for x := 0; x < outputWidthPx; x++ {
 			if y >= m-lengths[x]-1 && y < m+lengths[x] {
-				b.WriteString(".")
+				b.WriteString(chars[0])
 			} else {
-				b.WriteString("~")
+				b.WriteString(chars[1])
 			}
 		}
 		b.WriteByte('\n')
