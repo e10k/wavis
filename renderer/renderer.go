@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"math"
+	"path/filepath"
 	"wav/parser"
 )
 
@@ -428,11 +429,13 @@ func ToInfo(wav *parser.Wav, waveform string) string {
 	var b bytes.Buffer
 
 	b.WriteByte('\n')
-	b.WriteString(fmt.Sprintf("File: %s\n", "File Name - TODO"))
-	b.WriteString(fmt.Sprintf("Channels: %d\n", wav.NumChannels))
-	b.WriteString(fmt.Sprintf("Sample Rate: %d\n", wav.SampleRate))
-	b.WriteString(fmt.Sprintf("Bits: %d\n", wav.BitsPerSample))
-	b.WriteString(fmt.Sprintf("Byte Rate: %d\n", wav.ByteRate))
+	b.WriteString(fmt.Sprintf("File:\t\t%s\n", filepath.Base(wav.Name)))
+	b.WriteString(fmt.Sprintf("Channels:\t%d\n", wav.NumChannels))
+	b.WriteString(fmt.Sprintf("Sample Rate:\t%d\n", wav.SampleRate))
+	b.WriteString(fmt.Sprintf("Precision:\t%d-bit\n", wav.BitsPerSample))
+	b.WriteString(fmt.Sprintf("Byte Rate:\t%d\n", wav.ByteRate))
+	b.WriteString(fmt.Sprintf("Duration:\t%.2fs\n", wav.GetDuration()))
+	b.WriteString(fmt.Sprintf("File Size:\t%d\n", wav.GetFileSize()))
 
 	b.WriteByte('\n')
 

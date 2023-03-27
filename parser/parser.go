@@ -11,6 +11,7 @@ import (
 )
 
 type Wav struct {
+	Name          string
 	ChunkID       [4]byte
 	ChunkSize     int32
 	Format        [4]byte
@@ -59,8 +60,10 @@ func readSample(r io.Reader, sampleSize int, audioFormat *int16) (int16, error) 
 
 func Parse(f *os.File) *Wav {
 	var wav Wav
+	wav.Name = f.Name()
 
 	r := bufio.NewReader(f)
+
 	if err := binary.Read(r, binary.BigEndian, &wav.ChunkID); err != nil {
 		log.Fatal(err)
 	}
@@ -157,6 +160,14 @@ func (w *Wav) GetMonoSamples() []int16 {
 	}
 
 	return monoSamples
+}
+
+func (w *Wav) GetFileSize() int32 {
+	return w.ChunkSize + 8
+}
+
+func (w *Wav) GetDuration() float64 {
+	return float64(w.Subchunk2Size) / float64(w.BitsPerSample) * float64(w.BitsPerSample/8) / float64(w.SampleRate) * float64(w.NumChannels)
 }
 
 func scaleToInt16(v interface{}) int16 {

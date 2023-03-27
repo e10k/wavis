@@ -41,17 +41,20 @@ func (o *Options) getChars() []string {
 	return []string{"*", " "}
 }
 
-func main() {
-	var options Options
+var options Options
+
+func init() {
 	options.width = flag.Int("width", 0, "output width")
 	options.height = flag.Int("height", 0, "output height")
-	options.padding = flag.Int("padding", 0, "output vertical padding")
+	options.padding = flag.Int("padding", 0, "output padding")
 	options.circleRadius = flag.Int("circle-radius", 0, "inner circle radius for radial svg")
 	options.chars = flag.String("chars", "* ", "characters to use for the ascii representation")
 	options.border = flag.Bool("border", false, "whether the ascii representation should have a border")
 	options.resolution = flag.Int("resolution", 0, "data points per second")
-	options.format = flag.Int("format", 0, "output format") // 1 is symmetrical svg
+	options.format = flag.Int("format", 0, "output format")
+}
 
+func main() {
 	flag.Parse()
 
 	filename := flag.Arg(0)
