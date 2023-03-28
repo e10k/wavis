@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -168,6 +169,19 @@ func (w *Wav) GetFileSize() int32 {
 
 func (w *Wav) GetDuration() float64 {
 	return float64(w.Subchunk2Size) / float64(w.BitsPerSample) * float64(w.BitsPerSample/8) / float64(w.SampleRate) * float64(w.NumChannels)
+}
+
+func (w *Wav) GetFormattedDuration() string {
+	duration := w.GetDuration()
+
+	d := int(duration)
+	milliseconds := int((duration - float64(d)) * 1000)
+
+	hours := d / 3600
+	minutes := d % 3600 / 60
+	seconds := d % 3600 % 60
+
+	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds)
 }
 
 func scaleToInt16(v interface{}) int16 {

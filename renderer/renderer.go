@@ -434,7 +434,7 @@ func ToInfo(wav *parser.Wav, waveform string) string {
 	b.WriteString(fmt.Sprintf("Sample Rate:\t%d\n", wav.SampleRate))
 	b.WriteString(fmt.Sprintf("Precision:\t%d-bit\n", wav.BitsPerSample))
 	b.WriteString(fmt.Sprintf("Byte Rate:\t%d\n", wav.ByteRate))
-	b.WriteString(fmt.Sprintf("Duration:\t%.2fs\n", wav.GetDuration()))
+	b.WriteString(fmt.Sprintf("Duration:\t%s\n", wav.GetFormattedDuration()))
 	b.WriteString(fmt.Sprintf("File Size:\t%d\n", wav.GetFileSize()))
 
 	b.WriteByte('\n')
