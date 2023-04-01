@@ -168,7 +168,7 @@ func (w *Wav) GetFileSize() int32 {
 }
 
 func (w *Wav) GetDuration() float64 {
-	return float64(w.Subchunk2Size) / float64(w.BitsPerSample) * float64(w.BitsPerSample/8) / float64(w.SampleRate) * float64(w.NumChannels)
+	return float64(w.Subchunk2Size) / float64(w.SampleRate*int32(w.NumChannels)*int32(w.BitsPerSample/8))
 }
 
 func (w *Wav) GetFormattedDuration() string {
