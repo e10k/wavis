@@ -167,12 +167,14 @@ func (w *Wav) GetFileSize() int32 {
 	return w.ChunkSize + 8
 }
 
-func (w *Wav) GetDuration() float64 {
-	return float64(w.Subchunk2Size) / float64(w.SampleRate*int32(w.NumChannels)*int32(w.BitsPerSample/8))
+func (w *Wav) GetDuration() (float64, int32) {
+	numSamples := float64(w.Subchunk2Size / int32(w.NumChannels*w.BitsPerSample/8))
+
+	return numSamples / float64(w.SampleRate), int32(numSamples)
 }
 
 func (w *Wav) GetFormattedDuration() string {
-	duration := w.GetDuration()
+	duration, samples := w.GetDuration()
 
 	d := int(duration)
 	milliseconds := int((duration - float64(d)) * 1000)
@@ -181,7 +183,7 @@ func (w *Wav) GetFormattedDuration() string {
 	minutes := d % 3600 / 60
 	seconds := d % 3600 % 60
 
-	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds)
+	return fmt.Sprintf("%02d:%02d:%02d.%03d = %d samples", hours, minutes, seconds, milliseconds, samples)
 }
 
 func scaleToInt16(v interface{}) int16 {
