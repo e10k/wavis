@@ -76,27 +76,21 @@ func main() {
 	wav = parser.Parse(f)
 
 	switch *options.format {
-	case 0:
+	case 1:
+		fmt.Println(getBlobSvg(wav, &options))
+	case 2:
+		fmt.Println(getSingleLineSvg(wav, &options))
+	case 3:
+		fmt.Println(getRadialSvg(wav, &options))
+	case 4:
+		fmt.Println(getAscii(wav, &options))
+	default:
 		*options.width = 80
 		*options.height = 18
 		*options.padding = 0
 		*options.border = true
 
 		fmt.Println(getInfo(wav, getAscii(wav, &options)))
-	case 1:
-		fmt.Println(getBlobSvg(wav, &options))
-	case 2:
-		fmt.Println("true shape (not symmetrical), not implemented; probably useless? tbd")
-	case 3:
-		fmt.Println(getSingleLineSvg(wav, &options))
-	case 4:
-		fmt.Println(getRadialSvg(wav, &options))
-	case 5:
-		fmt.Println("city skyline, not implemented")
-	case 6:
-		fmt.Println(getAscii(wav, &options))
-	default:
-		fmt.Println("output waveform information, no visualisation, not implemented")
 	}
 
 }
