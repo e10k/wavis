@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"strings"
 	"wav/parser"
 	"wav/renderer"
 	"wav/utils"
@@ -14,55 +13,19 @@ import (
 
 var wav *parser.Wav
 
-type Options struct {
-	width        *int
-	height       *int
-	padding      *int
-	circleRadius *int
-	chars        *string
-	border       *bool
-	resolution   *int
-	format       *int
-}
-
-func (o *Options) getChars() []string {
-	chars := strings.Split(*o.chars, "")
-
-	l := len(chars)
-
-	if l >= 2 {
-		return chars[0:2]
-	}
-
-	if l == 1 {
-		return []string{chars[0], " "}
-	}
-
-	return []string{"*", " "}
-}
-
-var options Options
+var options utils.Options
 
 func init() {
-	options.width = flag.Int("width", 0, "output width")
-	options.height = flag.Int("height", 0, "output height")
-	options.padding = flag.Int("padding", 0, "output padding")
-	options.circleRadius = flag.Int("circle-radius", 0, "inner circle radius for radial svg")
-	options.chars = flag.String("chars", "* ", "characters to use for the ascii representation")
-	options.border = flag.Bool("border", false, "whether the ascii representation should have a border")
-	options.resolution = flag.Int("resolution", 0, "data points per second")
-	options.format = flag.Int("format", 0, "output format")
+	options.Width = flag.Int("width", 0, "output width")
+	options.Height = flag.Int("height", 0, "output height")
+	options.Padding = flag.Int("padding", 0, "output padding")
+	options.CircleRadius = flag.Int("circle-radius", 0, "inner circle radius for radial svg")
+	options.Chars = flag.String("chars", "* ", "characters to use for the ascii representation")
+	options.Border = flag.Bool("border", false, "whether the ascii representation should have a border")
+	options.Resolution = flag.Int("resolution", 0, "data points per second")
+	options.Format = flag.Int("format", 0, "output format")
 
-	flag.Usage = func() {
-		flagSet := flag.CommandLine
-		fmt.Printf("Usage:\n")
-		order := []string{"format", "resolution", "width", "height", "padding", "circle-radius", "chars", "border"}
-		for _, name := range order {
-			f := flagSet.Lookup(name)
-			fmt.Printf("  -%s\n", f.Name)
-			fmt.Printf("\t%s\n", f.Usage)
-		}
-	}
+	flag.Usage = options.Usage(flag.CommandLine)
 }
 
 func main() {
@@ -86,7 +49,7 @@ func main() {
 
 	wav = parser.Parse(f)
 
-	switch *options.format {
+	switch *options.Format {
 	case 1:
 		fmt.Println(getBlobSvg(wav, &options))
 	case 2:
@@ -96,17 +59,17 @@ func main() {
 	case 4:
 		fmt.Println(getAscii(wav, &options))
 	default:
-		*options.width = 80
-		*options.height = 18
-		*options.padding = 0
-		*options.border = true
+		*options.Width = 80
+		*options.Height = 18
+		*options.Padding = 0
+		*options.Border = true
 
 		fmt.Println(getInfo(wav, getAscii(wav, &options)))
 	}
 
 }
 
-func getBlobSvg(wav *parser.Wav, options *Options) string {
+func getBlobSvg(wav *parser.Wav, options *utils.Options) string {
 	const (
 		defaultWidth      = 800
 		defaultHeight     = 300
@@ -115,19 +78,19 @@ func getBlobSvg(wav *parser.Wav, options *Options) string {
 
 	monoSamples := wav.GetMonoSamples()
 
-	width := *options.width
+	width := *options.Width
 	if width == 0 {
 		width = defaultWidth
 	}
 
-	height := *options.height
+	height := *options.Height
 	if height == 0 {
 		height = defaultHeight
 	}
 
-	padding := *options.padding
+	padding := *options.Padding
 
-	resolution := *options.resolution
+	resolution := *options.Resolution
 	if resolution == 0 {
 		resolution = defaultResolution
 	}
@@ -139,7 +102,7 @@ func getBlobSvg(wav *parser.Wav, options *Options) string {
 	return svg
 }
 
-func getSingleLineSvg(wav *parser.Wav, options *Options) string {
+func getSingleLineSvg(wav *parser.Wav, options *utils.Options) string {
 	const (
 		defaultWidth      = 800
 		defaultHeight     = 300
@@ -148,19 +111,19 @@ func getSingleLineSvg(wav *parser.Wav, options *Options) string {
 
 	monoSamples := wav.GetMonoSamples()
 
-	width := *options.width
+	width := *options.Width
 	if width == 0 {
 		width = defaultWidth
 	}
 
-	height := *options.height
+	height := *options.Height
 	if height == 0 {
 		height = defaultHeight
 	}
 
-	padding := *options.padding
+	padding := *options.Padding
 
-	resolution := *options.resolution
+	resolution := *options.Resolution
 	if resolution == 0 {
 		resolution = defaultResolution
 	}
@@ -172,7 +135,7 @@ func getSingleLineSvg(wav *parser.Wav, options *Options) string {
 	return svg
 }
 
-func getRadialSvg(wav *parser.Wav, options *Options) string {
+func getRadialSvg(wav *parser.Wav, options *utils.Options) string {
 	const (
 		defaultWidth        = 500
 		defaultHeight       = 500
@@ -182,25 +145,25 @@ func getRadialSvg(wav *parser.Wav, options *Options) string {
 
 	monoSamples := wav.GetMonoSamples()
 
-	width := *options.width
+	width := *options.Width
 	if width == 0 {
 		width = defaultWidth
 	}
 
-	height := *options.height
+	height := *options.Height
 	if height == 0 {
 		height = defaultHeight
 	}
 
-	padding := *options.padding
+	padding := *options.Padding
 
 	// points per second
-	resolution := *options.resolution
+	resolution := *options.Resolution
 	if resolution == 0 {
 		resolution = defaultResolution
 	}
 
-	circleRadius := *options.circleRadius
+	circleRadius := *options.CircleRadius
 	if circleRadius == 0 {
 		circleRadius = defaultCircleRadius
 	}
@@ -212,7 +175,7 @@ func getRadialSvg(wav *parser.Wav, options *Options) string {
 	return svg
 }
 
-func getAscii(wav *parser.Wav, options *Options) string {
+func getAscii(wav *parser.Wav, options *utils.Options) string {
 	const (
 		defaultWidth      = 80
 		defaultHeight     = 15
@@ -220,12 +183,12 @@ func getAscii(wav *parser.Wav, options *Options) string {
 	)
 	monoSamples := wav.GetMonoSamples()
 
-	width := *options.width
+	width := *options.Width
 	if width == 0 {
 		width = defaultWidth
 	}
 
-	height := *options.height
+	height := *options.Height
 	if height == 0 {
 		height = defaultHeight
 	}
@@ -233,19 +196,19 @@ func getAscii(wav *parser.Wav, options *Options) string {
 		height++ // increase it to make it odd so that we can have a middle line
 	}
 
-	padding := *options.padding
+	padding := *options.Padding
 
-	border := *options.border
+	border := *options.Border
 
 	// points per second
-	resolution := *options.resolution
+	resolution := *options.Resolution
 	if resolution == 0 {
 		resolution = defaultResolution
 	}
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	output := renderer.ToAscii(scaledSamples, width, height, resolution, options.getChars(), border)
+	output := renderer.ToAscii(scaledSamples, width, height, resolution, options.GetChars(), border)
 
 	return output
 }
