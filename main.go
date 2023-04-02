@@ -52,6 +52,17 @@ func init() {
 	options.border = flag.Bool("border", false, "whether the ascii representation should have a border")
 	options.resolution = flag.Int("resolution", 0, "data points per second")
 	options.format = flag.Int("format", 0, "output format")
+
+	flag.Usage = func() {
+		flagSet := flag.CommandLine
+		fmt.Printf("Usage:\n")
+		order := []string{"format", "resolution", "width", "height", "padding", "circle-radius", "chars", "border"}
+		for _, name := range order {
+			f := flagSet.Lookup(name)
+			fmt.Printf("  -%s\n", f.Name)
+			fmt.Printf("\t%s\n", f.Usage)
+		}
+	}
 }
 
 func main() {
