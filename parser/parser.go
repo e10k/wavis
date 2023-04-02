@@ -46,6 +46,13 @@ func readSample(r io.Reader, sampleSize int, audioFormat *int16) (int16, error) 
 		}
 
 		return scaleToInt16(sample), nil
+	} else if sampleSize == 24 {
+		sample, err := read24BitSample(r)
+		if err != nil {
+			return int16(0), err
+		}
+
+		return scaleToInt16(sample), nil
 	} else if sampleSize == 32 && *audioFormat == 1 { // PCM
 		var sample int32
 		err := binary.Read(r, binary.LittleEndian, &sample)
@@ -107,23 +114,20 @@ func Parse(f *os.File) *Wav {
 
 	wav.Data = make([][]int16, wav.NumChannels)
 
-	// TODO can this be improved? get rid of nested loop and break out?
-out:
-	for {
-		var i int16
+	numSamples := wav.GetNumSamples()
+
+	var i int16
+	for s := int32(0); s < numSamples; s++ {
 		for ; i < wav.NumChannels; i++ {
 			sample, err := readSample(r, int(wav.BitsPerSample), &wav.AudioFormat)
 			if err != nil {
-				if err == io.EOF || err == io.ErrUnexpectedEOF {
-					break out
-				}
-
-				//log.Printf("%#v", wav.Data)
-				//log.Fatalf("wtf %s", err)
+				panic(err)
 			}
 
 			wav.Data[i] = append(wav.Data[i], sample)
 		}
+
+		i = 0
 	}
 
 	// all channels should have the same number of channels, but it's not always the case
@@ -165,6 +169,10 @@ func (w *Wav) GetMonoSamples() []int16 {
 
 func (w *Wav) GetFileSize() int32 {
 	return w.ChunkSize + 8
+}
+
+func (w *Wav) GetNumSamples() int32 {
+	return w.Subchunk2Size / int32(w.NumChannels*w.BitsPerSample/8)
 }
 
 func (w *Wav) GetDuration() (float64, int32) {
@@ -217,4 +225,20 @@ func scaleToInt16(v interface{}) int16 {
 
 func scale(input float64, inputMin float64, inputMax float64, outputMin float64, outputMax float64) float64 {
 	return (input-inputMin)*(outputMax-outputMin)/(inputMax-inputMin) + outputMin
+}
+
+func read24BitSample(r io.Reader) (int32, error) {
+	var buf [3]byte
+
+	err := binary.Read(r, binary.LittleEndian, &buf)
+	if err != nil {
+		return 0, err
+	}
+
+	sample := int32(buf[0]) | (int32(buf[1]) << 8) | (int32(buf[2]) << 16)
+	if (sample & (1 << 23)) != 0 {
+		sample |= ^((1 << 24) - 1)
+	}
+
+	return sample, nil
 }

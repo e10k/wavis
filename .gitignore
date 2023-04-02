@@ -1,3 +1,5 @@
 .idea
 .DS_Store
 wav
+go_build_wav
+
