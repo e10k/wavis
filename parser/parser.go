@@ -116,6 +116,13 @@ func Parse(f *os.File) *Wav {
 
 	numSamples := wav.GetNumSamples()
 
+	if numSamples == 0 {
+		// this can happen when the wav format is unsupported
+		// (e.g. is it 64-bit float and contains a "fact" chunk that messes the parsing above);
+		// TODO find better solution for handling this
+		panic("could not get the number of samples")
+	}
+
 	var i int16
 	for s := int32(0); s < numSamples; s++ {
 		for ; i < wav.NumChannels; i++ {
