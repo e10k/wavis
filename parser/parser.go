@@ -61,6 +61,14 @@ func readSample(r io.Reader, sampleSize int, audioFormat *int16) (int16, error) 
 		}
 
 		return scaleToInt16(sample), nil
+	} else if sampleSize == 32 && *audioFormat == 3 { // IEEE_FLOAT
+		var sample float32
+		err := binary.Read(r, binary.LittleEndian, &sample)
+		if err != nil {
+			return int16(0), err
+		}
+
+		return scaleToInt16(sample), nil
 	} else {
 		return int16(0), errors.New("invalid sample size")
 	}
@@ -223,6 +231,10 @@ func scaleToInt16(v interface{}) int16 {
 		input = float64(t)
 		inputMin = float64(math.MinInt64)
 		inputMax = float64(math.MaxInt64)
+	case float32:
+		input = float64(t)
+		inputMin = float64(-1)
+		inputMax = float64(1)
 	default:
 		log.Fatal("unsupported type")
 	}
