@@ -69,6 +69,14 @@ func readSample(r io.Reader, sampleSize int, audioFormat *int16) (int16, error) 
 		}
 
 		return scaleToInt16(sample), nil
+	} else if sampleSize == 64 && *audioFormat == 3 { // IEEE_FLOAT
+		var sample float64
+		err := binary.Read(r, binary.LittleEndian, &sample)
+		if err != nil {
+			return int16(0), err
+		}
+
+		return scaleToInt16(sample), nil
 	} else {
 		return int16(0), errors.New("invalid sample size")
 	}
@@ -113,11 +121,40 @@ func Parse(f *os.File) *Wav {
 	if err := binary.Read(r, binary.LittleEndian, &wav.BitsPerSample); err != nil {
 		log.Fatal(err)
 	}
-	if err := binary.Read(r, binary.BigEndian, &wav.Subchunk2ID); err != nil {
+
+	if wav.Subchunk1Size > int32(16) {
+		discarded := make([]byte, wav.Subchunk1Size-int32(16))
+
+		if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	var chunkSignature [4]byte
+	var chunkSize int32
+	if err := binary.Read(r, binary.BigEndian, &chunkSignature); err != nil {
 		log.Fatal(err)
 	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.Subchunk2Size); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &chunkSize); err != nil {
 		log.Fatal(err)
+	}
+
+	// if the previous chunk is "fact", discard it and check for the "data" chunk;
+	// if it's "data", use it
+	if string(chunkSignature[:]) == "fact" {
+		discardedFactData := make([]byte, chunkSize)
+		if err := binary.Read(r, binary.BigEndian, &discardedFactData); err != nil {
+			log.Fatal(err)
+		}
+		if err := binary.Read(r, binary.BigEndian, &wav.Subchunk2ID); err != nil {
+			log.Fatal(err)
+		}
+		if err := binary.Read(r, binary.LittleEndian, &wav.Subchunk2Size); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		wav.Subchunk2ID = chunkSignature
+		wav.Subchunk2Size = chunkSize
 	}
 
 	wav.Data = make([][]int16, wav.NumChannels)
@@ -233,6 +270,10 @@ func scaleToInt16(v interface{}) int16 {
 		inputMax = float64(math.MaxInt64)
 	case float32:
 		input = float64(t)
+		inputMin = float64(-1)
+		inputMax = float64(1)
+	case float64:
+		input = t
 		inputMin = float64(-1)
 		inputMax = float64(1)
 	default:
