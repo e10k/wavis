@@ -89,7 +89,6 @@ func Parse(f *os.File) *Wav {
 	r := bufio.NewReader(f)
 
 	for {
-		// read a chunk ID
 		var chunkID [4]byte
 		var chunkSize int32
 		if err := binary.Read(r, binary.BigEndian, &chunkID); err != nil {
@@ -169,9 +168,8 @@ func parseData(r *bufio.Reader, wav *Wav) {
 	numSamples := wav.GetNumSamples()
 
 	if numSamples == 0 {
-		// this can happen when the wav format is unsupported
-		// (e.g. is it 64-bit float and contains a "fact" chunk that messes the parsing above);
-		// TODO find better solution for handling this
+		// not sure when this can happen (malformed wav?), but if it happens
+		// it leads to a division by zero down the line
 		panic("could not get the number of samples")
 	}
 
