@@ -88,75 +88,82 @@ func Parse(f *os.File) *Wav {
 
 	r := bufio.NewReader(f)
 
-	if err := binary.Read(r, binary.BigEndian, &wav.ChunkID); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.ChunkSize); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.BigEndian, &wav.Format); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.BigEndian, &wav.Subchunk1ID); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.Subchunk1Size); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.AudioFormat); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.NumChannels); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.SampleRate); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.ByteRate); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.BlockAlign); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &wav.BitsPerSample); err != nil {
-		log.Fatal(err)
-	}
-
-	if wav.Subchunk1Size > int32(16) {
-		discarded := make([]byte, wav.Subchunk1Size-int32(16))
-
-		if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
+	for {
+		// read a chunk ID
+		var chunkID [4]byte
+		var chunkSize int32
+		if err := binary.Read(r, binary.BigEndian, &chunkID); err != nil {
+			if err == io.EOF {
+				break
+			}
 			log.Fatal(err)
+		}
+		if err := binary.Read(r, binary.LittleEndian, &chunkSize); err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.Fatal(err)
+		}
+
+		chunkIDStr := string(chunkID[:])
+
+		if chunkIDStr == "RIFF" {
+			wav.ChunkID = chunkID
+			wav.ChunkSize = chunkSize
+
+			if err := binary.Read(r, binary.BigEndian, &wav.Format); err != nil {
+				log.Fatal(err)
+			}
+		} else if chunkIDStr == "fmt " {
+			wav.Subchunk1ID = chunkID
+			wav.Subchunk1Size = chunkSize
+
+			if err := binary.Read(r, binary.LittleEndian, &wav.AudioFormat); err != nil {
+				log.Fatal(err)
+			}
+			if err := binary.Read(r, binary.LittleEndian, &wav.NumChannels); err != nil {
+				log.Fatal(err)
+			}
+			if err := binary.Read(r, binary.LittleEndian, &wav.SampleRate); err != nil {
+				log.Fatal(err)
+			}
+			if err := binary.Read(r, binary.LittleEndian, &wav.ByteRate); err != nil {
+				log.Fatal(err)
+			}
+			if err := binary.Read(r, binary.LittleEndian, &wav.BlockAlign); err != nil {
+				log.Fatal(err)
+			}
+			if err := binary.Read(r, binary.LittleEndian, &wav.BitsPerSample); err != nil {
+				log.Fatal(err)
+			}
+			// 16 bytes consumed from this chunk so far;
+			// discard the remaining bytes, if any
+			remainingBytes := chunkSize - int32(16)
+			if remainingBytes > 0 {
+				discarded := make([]byte, remainingBytes)
+				if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
+					log.Fatal(err)
+				}
+			}
+		} else if chunkIDStr == "data" {
+			wav.Subchunk2ID = chunkID
+			wav.Subchunk2Size = chunkSize
+
+			parseData(r, &wav)
+		} else {
+			// discarding chunks (that may or may not be present), like "PEAK", "fact", etc
+			discarded := make([]byte, chunkSize)
+
+			if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
-	var chunkSignature [4]byte
-	var chunkSize int32
-	if err := binary.Read(r, binary.BigEndian, &chunkSignature); err != nil {
-		log.Fatal(err)
-	}
-	if err := binary.Read(r, binary.LittleEndian, &chunkSize); err != nil {
-		log.Fatal(err)
-	}
+	return &wav
+}
 
-	// if the previous chunk is "fact", discard it and check for the "data" chunk;
-	// if it's "data", use it
-	if string(chunkSignature[:]) == "fact" {
-		discardedFactData := make([]byte, chunkSize)
-		if err := binary.Read(r, binary.BigEndian, &discardedFactData); err != nil {
-			log.Fatal(err)
-		}
-		if err := binary.Read(r, binary.BigEndian, &wav.Subchunk2ID); err != nil {
-			log.Fatal(err)
-		}
-		if err := binary.Read(r, binary.LittleEndian, &wav.Subchunk2Size); err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		wav.Subchunk2ID = chunkSignature
-		wav.Subchunk2Size = chunkSize
-	}
-
+func parseData(r *bufio.Reader, wav *Wav) {
 	wav.Data = make([][]int16, wav.NumChannels)
 
 	numSamples := wav.GetNumSamples()
@@ -195,8 +202,6 @@ func Parse(f *os.File) *Wav {
 	for i := int16(0); i < wav.NumChannels; i++ {
 		wav.Data[i] = wav.Data[i][:minSamples]
 	}
-
-	return &wav
 }
 
 func (w *Wav) GetMonoSamples() []int16 {
