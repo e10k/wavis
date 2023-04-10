@@ -6,6 +6,8 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
+	"strings"
 	"wav/parser"
 	"wav/renderer"
 	"wav/utils"
@@ -32,7 +34,8 @@ func main() {
 	flag.Parse()
 
 	filename := flag.Arg(0)
-	if len(filename) < 1 {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if len(filename) < 1 || ext != ".wav" {
 		log.Fatal("No .wav file provided.")
 	}
 
