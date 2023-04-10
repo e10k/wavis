@@ -36,29 +36,44 @@ func main() {
 	filename := flag.Arg(0)
 	ext := strings.ToLower(filepath.Ext(filename))
 	if len(filename) < 1 || ext != ".wav" {
-		log.Fatal("No .wav file provided.")
+		log.Fatal("no .wav file provided")
 	}
 
 	f, err := os.Open(filename)
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			log.Fatal("Failed closing the file.")
+			log.Fatal("failed closing the file")
 		}
 	}(f)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed opening the file: %v", err)
 	}
 
-	wav = parser.Parse(f)
+	wav, err = parser.Parse(f)
+	if err != nil {
+		log.Fatalf("error parsing the file: %v", err)
+	}
 
 	switch *options.Format {
 	case 1:
-		fmt.Println(getBlobSvg(wav, &options))
+		if s, err := getBlobSvg(wav, &options); err != nil {
+			log.Fatalf("error creating blob svg: %v", err)
+		} else {
+			fmt.Println(s)
+		}
 	case 2:
-		fmt.Println(getSingleLineSvg(wav, &options))
+		if s, err := getSingleLineSvg(wav, &options); err != nil {
+			log.Fatalf("error creating single line svg: %v", err)
+		} else {
+			fmt.Println(s)
+		}
 	case 3:
-		fmt.Println(getRadialSvg(wav, &options))
+		if s, err := getRadialSvg(wav, &options); err != nil {
+			log.Fatalf("error creating radial svg: %v", err)
+		} else {
+			fmt.Println(s)
+		}
 	case 4:
 		fmt.Println(getAscii(wav, &options))
 	default:
@@ -72,7 +87,7 @@ func main() {
 
 }
 
-func getBlobSvg(wav *parser.Wav, options *utils.Options) string {
+func getBlobSvg(wav *parser.Wav, options *utils.Options) (string, error) {
 	const (
 		defaultWidth      = 800
 		defaultHeight     = 300
@@ -100,12 +115,12 @@ func getBlobSvg(wav *parser.Wav, options *utils.Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
 
-	svg := renderer.ToBlobSvg(wav, scaledSamples, width, height, resolution)
+	svg, err := renderer.ToBlobSvg(wav, scaledSamples, width, height, resolution)
 
-	return svg
+	return svg, err
 }
 
-func getSingleLineSvg(wav *parser.Wav, options *utils.Options) string {
+func getSingleLineSvg(wav *parser.Wav, options *utils.Options) (string, error) {
 	const (
 		defaultWidth      = 800
 		defaultHeight     = 300
@@ -133,12 +148,12 @@ func getSingleLineSvg(wav *parser.Wav, options *utils.Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height-padding))
 
-	svg := renderer.ToSingleLineSvg(wav, scaledSamples, width, height, resolution)
+	svg, err := renderer.ToSingleLineSvg(wav, scaledSamples, width, height, resolution)
 
-	return svg
+	return svg, err
 }
 
-func getRadialSvg(wav *parser.Wav, options *utils.Options) string {
+func getRadialSvg(wav *parser.Wav, options *utils.Options) (string, error) {
 	const (
 		defaultWidth        = 500
 		defaultHeight       = 500
@@ -173,9 +188,9 @@ func getRadialSvg(wav *parser.Wav, options *utils.Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(math.Min(float64(width), float64(height))/2-float64(padding)-float64(circleRadius)))
 
-	svg := renderer.ToRadialSvg(wav, scaledSamples, width, height, circleRadius, resolution)
+	svg, err := renderer.ToRadialSvg(wav, scaledSamples, width, height, circleRadius, resolution)
 
-	return svg
+	return svg, err
 }
 
 func getAscii(wav *parser.Wav, options *utils.Options) string {

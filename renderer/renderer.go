@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 	"math"
 	"path/filepath"
 	"wav/parser"
 )
 
-func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resolution int) string {
+func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resolution int) (string, error) {
 	if resolution == 0 {
 		resolution = 5
 	}
@@ -117,17 +116,11 @@ func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resol
 	svgTemplate := `<svg width="{{.Width}}" height="{{.Height}}" viewBox="0 0 {{.Width}} {{.Height}}" xmlns="http://www.w3.org/2000/svg">
 	<path d="{{ .PathData }}" fill="none" stroke="red" stroke-width="1"/>
 </svg>`
-	var tpl bytes.Buffer
-	tmpl, err := template.New("svg").Parse(svgTemplate)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tmpl.Execute(&tpl, svgStruct)
 
-	return tpl.String()
+	return getStringFromSvgTemplate(svgTemplate, svgStruct)
 }
 
-func ToSingleLineSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resolution int) string {
+func ToSingleLineSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resolution int) (string, error) {
 	if resolution == 0 {
 		resolution = 5
 	}
@@ -229,17 +222,10 @@ func ToSingleLineSvg(wav *parser.Wav, amplitudes []int16, width int, height int,
 	<path d="{{ .PathData }}" fill="none" stroke="red" stroke-width="1"/>
 </svg>`
 
-	var tpl bytes.Buffer
-	tmpl, err := template.New("svg").Parse(svgTemplate)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tmpl.Execute(&tpl, svgStruct)
-
-	return tpl.String()
+	return getStringFromSvgTemplate(svgTemplate, svgStruct)
 }
 
-func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, CircleRadius int, resolution int) string {
+func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, CircleRadius int, resolution int) (string, error) {
 	const (
 		defaultResolution = 5
 	)
@@ -334,14 +320,7 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, Cir
 	{{end}}<circle cx="{{.CenterX}}" cy="{{.CenterY}}" r="{{.CircleRadius}}" fill="white"></circle>
 </svg>`
 
-	var tpl bytes.Buffer
-	tmpl, err := template.New("svg").Parse(svgTemplate)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tmpl.Execute(&tpl, svgStruct)
-
-	return tpl.String()
+	return getStringFromSvgTemplate(svgTemplate, svgStruct)
 }
 
 func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []string, border bool) string {
@@ -442,4 +421,17 @@ func ToInfo(wav *parser.Wav, waveform string) string {
 	b.WriteString(waveform)
 
 	return b.String()
+}
+
+func getStringFromSvgTemplate(svgTemplate string, svgStruct interface{}) (string, error) {
+	var tpl bytes.Buffer
+	tmpl, err := template.New("svg").Parse(svgTemplate)
+	if err != nil {
+		return "", fmt.Errorf("template error: %v", err)
+	}
+	if err = tmpl.Execute(&tpl, svgStruct); err != nil {
+		return "", fmt.Errorf("template error: %v", err)
+	}
+
+	return tpl.String(), nil
 }

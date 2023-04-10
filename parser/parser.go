@@ -82,7 +82,7 @@ func readSample(r io.Reader, sampleSize int, audioFormat *int16) (int16, error) 
 	}
 }
 
-func Parse(f *os.File) *Wav {
+func Parse(f *os.File) (*Wav, error) {
 	var wav Wav
 	wav.Name = f.Name()
 
@@ -95,13 +95,13 @@ func Parse(f *os.File) *Wav {
 			if err == io.EOF {
 				break
 			}
-			log.Fatal(err)
+			return nil, fmt.Errorf("failed reading the chunk ID: %v", err)
 		}
 		if err := binary.Read(r, binary.LittleEndian, &chunkSize); err != nil {
 			if err == io.EOF {
 				break
 			}
-			log.Fatal(err)
+			return nil, fmt.Errorf("failed reading the chunk size: %v", err)
 		}
 
 		chunkIDStr := string(chunkID[:])
@@ -111,29 +111,29 @@ func Parse(f *os.File) *Wav {
 			wav.ChunkSize = chunkSize
 
 			if err := binary.Read(r, binary.BigEndian, &wav.Format); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 		} else if chunkIDStr == "fmt " {
 			wav.Subchunk1ID = chunkID
 			wav.Subchunk1Size = chunkSize
 
 			if err := binary.Read(r, binary.LittleEndian, &wav.AudioFormat); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			if err := binary.Read(r, binary.LittleEndian, &wav.NumChannels); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			if err := binary.Read(r, binary.LittleEndian, &wav.SampleRate); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			if err := binary.Read(r, binary.LittleEndian, &wav.ByteRate); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			if err := binary.Read(r, binary.LittleEndian, &wav.BlockAlign); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			if err := binary.Read(r, binary.LittleEndian, &wav.BitsPerSample); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 			// 16 bytes consumed from this chunk so far;
 			// discard the remaining bytes, if any
@@ -141,28 +141,30 @@ func Parse(f *os.File) *Wav {
 			if remainingBytes > 0 {
 				discarded := make([]byte, remainingBytes)
 				if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
-					log.Fatal(err)
+					return nil, fmt.Errorf("parse error: %v", err)
 				}
 			}
 		} else if chunkIDStr == "data" {
 			wav.Subchunk2ID = chunkID
 			wav.Subchunk2Size = chunkSize
 
-			parseData(r, &wav)
+			if err := parseData(r, &wav); err != nil {
+				return nil, fmt.Errorf("parse error: %v", err)
+			}
 		} else {
 			// discarding chunks (that may or may not be present), like "PEAK", "fact", etc
 			discarded := make([]byte, chunkSize)
 
 			if err := binary.Read(r, binary.BigEndian, &discarded); err != nil {
-				log.Fatal(err)
+				return nil, fmt.Errorf("parse error: %v", err)
 			}
 		}
 	}
 
-	return &wav
+	return &wav, nil
 }
 
-func parseData(r *bufio.Reader, wav *Wav) {
+func parseData(r *bufio.Reader, wav *Wav) error {
 	wav.Data = make([][]int16, wav.NumChannels)
 
 	numSamples := wav.GetNumSamples()
@@ -170,7 +172,7 @@ func parseData(r *bufio.Reader, wav *Wav) {
 	if numSamples == 0 {
 		// not sure when this can happen (malformed wav?), but if it happens
 		// it leads to a division by zero down the line
-		panic("could not get the number of samples")
+		return fmt.Errorf("could not get the number of samples")
 	}
 
 	var i int16
@@ -178,7 +180,7 @@ func parseData(r *bufio.Reader, wav *Wav) {
 		for ; i < wav.NumChannels; i++ {
 			sample, err := readSample(r, int(wav.BitsPerSample), &wav.AudioFormat)
 			if err != nil {
-				panic(err)
+				return fmt.Errorf("error reading sample: %v", err)
 			}
 
 			wav.Data[i] = append(wav.Data[i], sample)
@@ -200,6 +202,8 @@ func parseData(r *bufio.Reader, wav *Wav) {
 	for i := int16(0); i < wav.NumChannels; i++ {
 		wav.Data[i] = wav.Data[i][:minSamples]
 	}
+
+	return nil
 }
 
 func (w *Wav) GetMonoSamples() []int16 {
