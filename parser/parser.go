@@ -253,6 +253,14 @@ func (w *Wav) GetFormattedDuration() string {
 	return fmt.Sprintf("%02d:%02d:%02d.%03d = %d samples", hours, minutes, seconds, milliseconds, samples)
 }
 
+func (w *Wav) CheckFormat() error {
+	if w.AudioFormat != 1 && w.AudioFormat != 3 {
+		return fmt.Errorf("unsupported format: only PCM and IEEE float formats are supported")
+	}
+
+	return nil
+}
+
 func scaleToInt16(v interface{}) int16 {
 	var input float64
 	var inputMin float64

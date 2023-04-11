@@ -50,9 +50,12 @@ func main() {
 		log.Fatalf("failed opening the file: %v", err)
 	}
 
-	wav, err = parser.Parse(f)
-	if err != nil {
+	if wav, err = parser.Parse(f); err != nil {
 		log.Fatalf("error parsing the file: %v", err)
+	}
+
+	if err := wav.CheckFormat(); err != nil {
+		log.Fatalf("validation error: %v", err)
 	}
 
 	switch *options.Format {
