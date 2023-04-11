@@ -85,7 +85,8 @@ func main() {
 		*options.Padding = 0
 		*options.Border = true
 
-		fmt.Println(getInfo(wav, getAscii(wav, &options)))
+		ascii, _ := getAscii(wav, &options)
+		fmt.Println(getInfo(wav, ascii))
 	}
 
 }
@@ -196,7 +197,7 @@ func getRadialSvg(wav *parser.Wav, options *utils.Options) (string, error) {
 	return svg, err
 }
 
-func getAscii(wav *parser.Wav, options *utils.Options) string {
+func getAscii(wav *parser.Wav, options *utils.Options) (string, error) {
 	const (
 		defaultWidth      = 80
 		defaultHeight     = 15
@@ -229,9 +230,9 @@ func getAscii(wav *parser.Wav, options *utils.Options) string {
 
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	output := renderer.ToAscii(scaledSamples, width, height, resolution, options.GetChars(), border)
+	output, err := renderer.ToAscii(scaledSamples, width, height, resolution, options.GetChars(), border)
 
-	return output
+	return output, err
 }
 
 func getInfo(wav *parser.Wav, waveform string) string {

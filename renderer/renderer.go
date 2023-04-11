@@ -23,6 +23,9 @@ func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resol
 	chunksCount := amplitudesLen / (int(wav.SampleRate / int32(resolution)))
 
 	samplesPerChunk := amplitudesLen / chunksCount
+	if samplesPerChunk == 0 {
+		return "", fmt.Errorf("not enough samples")
+	}
 
 	var output []int16
 	var chunks [][]int16
@@ -134,6 +137,9 @@ func ToSingleLineSvg(wav *parser.Wav, amplitudes []int16, width int, height int,
 	chunksCount := amplitudesLen / (int(wav.SampleRate / int32(resolution)))
 
 	samplesPerChunk := amplitudesLen / chunksCount
+	if samplesPerChunk == 0 {
+		return "", fmt.Errorf("not enough samples")
+	}
 
 	var output []int16
 	var chunks [][]int16
@@ -243,6 +249,9 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, Cir
 	chunksCount := amplitudesLen / (int(wav.SampleRate / int32(resolution)))
 
 	samplesPerChunk := amplitudesLen / chunksCount
+	if samplesPerChunk == 0 {
+		return "", fmt.Errorf("not enough samples")
+	}
 
 	var chunks [][]int16
 	for i := 0; i < amplitudesLen; i += samplesPerChunk {
@@ -323,7 +332,7 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, Cir
 	return getStringFromSvgTemplate(svgTemplate, svgStruct)
 }
 
-func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []string, border bool) string {
+func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []string, border bool) (string, error) {
 	if resolution == 0 {
 		resolution = 5
 	}
@@ -335,6 +344,9 @@ func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []
 	}
 
 	samplesPerChunk := amplitudesLen / width
+	if samplesPerChunk == 0 {
+		return "", fmt.Errorf("not enough samples")
+	}
 
 	var output []int16
 	var chunks [][]int16
@@ -401,7 +413,7 @@ func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []
 		}
 	}
 
-	return b.String()
+	return b.String(), nil
 }
 
 func ToInfo(wav *parser.Wav, waveform string) string {
@@ -414,11 +426,12 @@ func ToInfo(wav *parser.Wav, waveform string) string {
 	b.WriteString(fmt.Sprintf("Precision:\t%d-bit\n", wav.BitsPerSample))
 	b.WriteString(fmt.Sprintf("Byte Rate:\t%d\n", wav.ByteRate))
 	b.WriteString(fmt.Sprintf("Duration:\t%s\n", wav.GetFormattedDuration()))
-	b.WriteString(fmt.Sprintf("File Size:\t%d\n", wav.GetFileSize()))
+	b.WriteString(fmt.Sprintf("File Size:\t%d", wav.GetFileSize()))
 
-	b.WriteByte('\n')
-
-	b.WriteString(waveform)
+	if len(waveform) > 0 {
+		b.WriteString("\n\n")
+		b.WriteString(waveform)
+	}
 
 	return b.String()
 }
