@@ -30,7 +30,7 @@ func (o *Options) GetChars() []string {
 		return []string{chars[0], " "}
 	}
 
-	return []string{"*", " "}
+	return []string{"•", " "}
 }
 
 func (o *Options) Usage(flagSet *flag.FlagSet) func() {

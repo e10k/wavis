@@ -332,16 +332,8 @@ func ToRadialSvg(wav *parser.Wav, amplitudes []int16, width int, height int, Cir
 	return getStringFromSvgTemplate(svgTemplate, svgStruct)
 }
 
-func ToAscii(amplitudes []int16, width int, height int, resolution int, chars []string, border bool) (string, error) {
-	if resolution == 0 {
-		resolution = 5
-	}
-
+func ToAscii(amplitudes []int16, width int, height int, chars []string, border bool) (string, error) {
 	amplitudesLen := len(amplitudes)
-
-	if resolution > amplitudesLen {
-		resolution = amplitudesLen
-	}
 
 	samplesPerChunk := amplitudesLen / width
 	if samplesPerChunk == 0 {

@@ -22,7 +22,7 @@ func init() {
 	options.Height = flag.Int("height", 0, "output height")
 	options.Padding = flag.Int("padding", 0, "output padding")
 	options.CircleRadius = flag.Int("circle-radius", 0, "inner circle radius for radial svg")
-	options.Chars = flag.String("chars", "* ", "characters to use for the ascii representation")
+	options.Chars = flag.String("chars", "• ", "characters to use for the ascii representation")
 	options.Border = flag.Bool("border", false, "whether the ascii representation should have a border")
 	options.Resolution = flag.Int("resolution", 0, "data points per second")
 	options.Format = flag.Int("format", 0, "output format")
@@ -78,15 +78,20 @@ func main() {
 			fmt.Println(s)
 		}
 	case 4:
-		fmt.Println(getAscii(wav, &options))
+		if ascii, err := getAscii(wav, &options); err != nil {
+			log.Fatalf("error creating ascii waveform: %v", err)
+		} else {
+			fmt.Printf("\n%s\n", ascii)
+		}
 	default:
-		*options.Width = 80
-		*options.Height = 18
 		*options.Padding = 0
 		*options.Border = true
 
-		ascii, _ := getAscii(wav, &options)
-		fmt.Println(getInfo(wav, ascii))
+		if ascii, err := getAscii(wav, &options); err != nil {
+			log.Fatalf("error creating ascii waveform: %v", err)
+		} else {
+			fmt.Println(getInfo(wav, ascii))
+		}
 	}
 
 }
@@ -199,9 +204,8 @@ func getRadialSvg(wav *parser.Wav, options *utils.Options) (string, error) {
 
 func getAscii(wav *parser.Wav, options *utils.Options) (string, error) {
 	const (
-		defaultWidth      = 80
-		defaultHeight     = 15
-		defaultResolution = 2
+		defaultWidth  = 80
+		defaultHeight = 15
 	)
 	monoSamples := wav.GetMonoSamples()
 
@@ -222,15 +226,9 @@ func getAscii(wav *parser.Wav, options *utils.Options) (string, error) {
 
 	border := *options.Border
 
-	// points per second
-	resolution := *options.Resolution
-	if resolution == 0 {
-		resolution = defaultResolution
-	}
-
 	scaledSamples := utils.ScaleBetween(monoSamples, 0, int16(height/2-padding))
 
-	output, err := renderer.ToAscii(scaledSamples, width, height, resolution, options.GetChars(), border)
+	output, err := renderer.ToAscii(scaledSamples, width, height, options.GetChars(), border)
 
 	return output, err
 }
