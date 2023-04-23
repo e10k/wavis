@@ -91,15 +91,22 @@ func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resol
 	}
 
 	var pathData bytes.Buffer
-	pathData.WriteString(fmt.Sprintf("M %d %d", int(math.Round(points[0].X)), int(math.Round(points[0].Y))))
-	for i := 0; i < len(points)-1; i++ {
+	pathData.WriteString(fmt.Sprintf("M %d %d", int(math.Round(points[0].X)), height/2))
+
+	loopLimit := len(points) - 1
+	for i := 0; i < loopLimit; i++ {
 		xMid := math.Round((points[i].X + points[i+1].X) / 2)
 		yMid := math.Round((points[i].Y + points[i+1].Y) / 2)
 		cpX1 := math.Round((xMid + points[i].X) / 2)
 		cpX2 := math.Round((xMid + points[i+1].X) / 2)
 
 		pathData.WriteString(fmt.Sprintf("Q %d %d %d %d", int(cpX1), int(points[i].Y), int(xMid), int(yMid)))
-		pathData.WriteString(fmt.Sprintf("Q %d %d %d %d", int(cpX2), int(points[i+1].Y), int(points[i+1].X), int(points[i+1].Y)))
+
+		lastY := int(points[i+1].Y)
+		if i == loopLimit-1 {
+			lastY = height / 2
+		}
+		pathData.WriteString(fmt.Sprintf("Q %d %d %d %d", int(cpX2), int(points[i+1].Y), int(points[i+1].X), lastY))
 	}
 
 	type svg struct {
@@ -117,7 +124,7 @@ func ToBlobSvg(wav *parser.Wav, amplitudes []int16, width int, height int, resol
 	}
 
 	svgTemplate := `<svg width="{{.Width}}" height="{{.Height}}" viewBox="0 0 {{.Width}} {{.Height}}" xmlns="http://www.w3.org/2000/svg">
-	<path d="{{ .PathData }}" fill="none" stroke="red" stroke-width="1"/>
+	<path d="{{ .PathData }} Z" fill="none" stroke="red" stroke-width="1"/>
 </svg>`
 
 	return getStringFromSvgTemplate(svgTemplate, svgStruct)
